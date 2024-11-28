@@ -1,0 +1,5 @@
+{
+    "ansible.python.interpreterPath": "/bin/python",
+    "ansibleVault.keyfile": "~/.personal_vault.key",
+    "ansibleVaultInline.keyfile": "~/.personal_vault.key",
+}

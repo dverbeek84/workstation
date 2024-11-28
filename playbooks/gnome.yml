@@ -1,0 +1,45 @@
+---
+- name: Configure Gnome
+  hosts: localhost
+
+  tasks:
+    - name: Install packages
+      become: true
+      ansible.builtin.dnf:
+        name:
+          - dconf
+          - gnome-extensions-app
+          - https://www.rpmfind.net/linux/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/gnome-shell-extension-just-perfection-30.0-1.fc42.noarch.rpm
+          - gnome-themes-extra
+
+    - name: Enable Just Perfection Desktop extension
+      ansible.builtin.shell: |
+        gnome-extensions enable just-perfection-desktop@just-perfection
+      args:
+        executable: /bin/bash
+      register: output
+      changed_when: output.rc != 0
+
+    - name: Set Gnome settings
+      community.general.dconf:
+        key: "{{ item.key }}"
+        value: "{{ item.value }}"
+      loop:
+        - { key: /org/fedorahosted/background-logo-extension/logo-always-visible, value: true }
+        - { key: /org/gnome/desktop/interface/color-scheme, value: "'prefer-dark'" }
+        - { key: /org/gtk/settings/file-chooser/clock-format, value: "'24h'" }
+        - { key: /org/gtk/gtk4/settings/file-chooser/show-hidden, value: true }
+        - { key: /org/gtk/gtk4/settings/file-chooser/sort-directories-first, value: true }
+        - { key: /org/gnome/desktop/interface/accent-color, value: "'pink'" }
+        - { key: /org/gnome/desktop/interface/clock-format, value: "'24h'" }
+        - { key: /org/gnome/desktop/interface/gtk-theme, value: "'Adwaita-dark'" }
+        - { key: /org/gnome/desktop/interface/text-scaling-factor, value: 1.10 }
+        - { key: /org/gnome/desktop/notifications/show-in-lock-screen, value: false }
+        - { key: /org/gnome/desktop/wm/preferences/button-layout, value: "'appmenu:minimize,maximize,close'" }
+        - { key: /org/gnome/nautilus/preferences/default-folder-viewer, value: "'list-view'" }
+        - { key: /org/gnome/settings-daemon/plugins/power/power-button-action, value: "'interactive'" }
+        - { key: /org/gnome/settings-daemon/plugins/power/sleep-inactive-ac-type, value: "'nothing'" }
+        - { key: /org/gnome/shell/favorite-apps, value: "['org.gnome.Nautilus.desktop', 'org.mozilla.firefox.desktop', 'org.mozilla.thunderbird.desktop', 'com.spotify.Client.desktop', 'org.darktable.darktable.desktop', 'org.keepassxc.KeePassXC.desktop', 'com.gexperts.Tilix.desktop', 'code.desktop', 'virt-manager.desktop']" }
+        - { key: /org/gnome/shell/last-selected-power-profile, value: "'performance'" }
+        - { key: /org/gnome/shell/extensions/just-perfection/search, value: "false" }
+        - { key: /org/gnome/shell/extensions/just-perfection/accessibility-menu, value: "false" }

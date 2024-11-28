@@ -1,0 +1,139 @@
+---
+- name: Install Toools
+  hosts: localhost
+  become: true
+  vars:
+    helm_version: 3.16.3
+    kubectl_version: 1.31.3
+    k9s_version: 0.31.5
+    terragrunt_version: 0.54.18
+
+  tasks:
+    - name: Ensure dependencies are installed
+      ansible.builtin.dnf:
+        name:
+          - curl
+          - tar
+        state: present
+        update_cache: true
+
+    # Libvirt
+    - name: Ensure Libvirt is installed
+      ansible.builtin.dnf:
+        name:
+          - libvirt
+          - virt-manager
+
+    - name: Ensure Libvirt is enabled
+      ansible.builtin.systemd:
+        name: libvirtd
+        enabled: true
+        state: started
+
+    - name: Ensure Libvirt is added to the user group
+      ansible.builtin.user:
+        name: danny
+        groups: libvirt
+        append: true
+
+    # SOPS
+    - name: Ensure SOPS is installed
+      ansible.builtin.get_url:
+        url: https://github.com/getsops/sops/releases/download/v3.8.1/sops-v3.8.1.linux.amd64
+        dest: /usr/local/bin/sops
+        mode: a+x
+        owner: root
+        group: root
+
+    # Age
+    - name: Ensure Age is installed
+      ansible.builtin.unarchive:
+        src: https://github.com/FiloSottile/age/releases/download/v1.1.1/age-v1.1.1-linux-amd64.tar.gz
+        dest: /usr/local/bin/
+        remote_src: true
+        mode: a+x
+        owner: root
+        group: root
+        extra_opts:
+          - --strip-components=1
+        include:
+          - age/age
+          - age/age-keygen
+
+    # Terraform / Packer
+    - name: Ensure HashiCorp repository is enabled
+      ansible.builtin.copy:
+        dest: /etc/yum.repos.d/hashicorp.repo
+        mode: "0644"
+        content: |
+          [hashicorp]
+          name=HashiCorp Stable - $basearch
+          baseurl=https://rpm.releases.hashicorp.com/fedora/$releasever/$basearch/stable
+          enabled=1
+          gpgcheck=1
+          gpgkey=https://rpm.releases.hashicorp.com/gpg
+
+    - name: Ensure Terraform and Packer are installed
+      ansible.builtin.dnf:
+        name:
+          - terraform
+          - packer
+        state: present
+        update_cache: true
+
+    # Terragrunt
+    - name: Ensure Terragrunt is installed
+      ansible.builtin.get_url:
+        url: https://github.com/gruntwork-io/terragrunt/releases/download/v{{ terragrunt_version }}/terragrunt_linux_amd64
+        dest: /usr/local/bin/terragrunt
+        mode: a+x
+        owner: root
+        group: root
+
+    # kubectl
+    - name: Ensure kubectl is installed
+      ansible.builtin.get_url:
+        url: "https://dl.k8s.io/release/v{{ kubectl_version }}/bin/linux/amd64/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: a+x
+        owner: root
+        group: root
+
+    # Helm
+    - name: Ensure helm is installed
+      ansible.builtin.unarchive:
+        src: "https://get.helm.sh/helm-v{{ helm_version }}-linux-amd64.tar.gz"
+        dest: /usr/local/bin/
+        remote_src: true
+        mode: a+x
+        owner: root
+        group: root
+        extra_opts:
+          - --strip-components=1
+        include:
+          - linux-amd64/helm
+
+    # K9S
+    - name: Ensure K9S is installed
+      ansible.builtin.unarchive:
+        src: "https://github.com/derailed/k9s/releases/download/v{{ k9s_version }}/k9s_Linux_amd64.tar.gz"
+        dest: /usr/local/bin/
+        remote_src: true
+        mode: a+x
+        owner: root
+        group: root
+        include:
+          - k9s
+
+    # Kubectx
+    - name: Ensure kubectx is installed
+      ansible.builtin.get_url:
+        url: "https://github.com/ahmetb/kubectx/releases/latest/download/kubectx"
+        dest: /usr/local/bin/kubectx
+        mode: a+x
+
+    - name: Ensure kubectx is installed
+      ansible.builtin.get_url:
+        url: "https://github.com/ahmetb/kubectx/releases/latest/download/kubens"
+        dest: /usr/local/bin/kubens
+        mode: a+x

@@ -1,0 +1,45 @@
+---
+- name: Configure SSH
+  hosts: localhost
+
+  vars:
+    ssh_keys:
+      - danny
+      - ekomenu
+      - its-ansible
+      - universiteit-utrecht
+
+  tasks:
+    - name: Add ssh config
+      ansible.builtin.copy:
+        src: ssh/config
+        dest: ~/.ssh/config
+        owner: danny
+        group: danny
+        mode: "0600"
+        force: true
+        remote_src: false
+
+    - name: Add ssh private key
+      ansible.builtin.copy:
+        src: "ssh/{{ item }}"
+        dest: "~/.ssh/{{ item }}"
+        decrypt: true
+        owner: danny
+        group: danny
+        mode: "0600"
+        force: true
+        remote_src: false
+      with_items: "{{ ssh_keys }}"
+
+    - name: Add ssh public key
+      ansible.builtin.copy:
+        src: "ssh/{{ item }}.pub"
+        dest: "~/.ssh/{{ item }}.pub"
+        decrypt: true
+        owner: danny
+        group: danny
+        mode: "0644"
+        force: true
+        remote_src: false
+      with_items: "{{ ssh_keys }}"

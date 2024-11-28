@@ -1,0 +1,84 @@
+Host *
+        StrictHostKeyChecking no
+        GlobalKnownHostsFile=/dev/null
+        UserKnownHostsFile=/dev/null
+
+# Git
+# --------------------------------------------------------------
+Host gitlab.com
+        User git
+        IdentityFile ~/.ssh/ekomenu
+
+Host github.com
+        User git
+        IdentityFile ~/.ssh/danny
+
+Host git.its.uu.nl
+        User git
+        IdentityFile ~/.ssh/universiteit-utrecht
+        ProxyCommand ssh -W %h:%p swozzy
+
+# Bastions
+# --------------------------------------------------------------
+Host swozzy
+        HostName swozzy.net.uu.nl
+        IdentityFile ~/.ssh/universiteit-utrecht
+        DynamicForward 0.0.0.0:3128
+        LocalForward 3389 131.211.11.22:3389
+        User verbe034
+
+Host steppingstone-prd
+        HostName 131.211.0.133
+        IdentityFile ~/.ssh/universiteit-utrecht
+        Port 22
+        User verbe034
+
+Host steppingstone-acc
+        HostName la0241.its.uu.nl
+        IdentityFile ~/.ssh/universiteit-utrecht
+        Port 2222
+        User verbe034
+
+Host steppingstone-prd-its
+        HostName lp0337.its.uu.nl
+        User its-ansible
+        IdentityFile ~/.ssh/its-ansible
+        Port 54322
+        ProxyCommand ssh -W %h:%p swozzy
+
+# VMWare Hosting
+# --------------------------------------------------------------
+Host lp* la* lt* lo* its-l* ictsc-*
+        User its-ansible
+        IdentityFile ~/.ssh/its-ansible
+        ProxyCommand ssh -W %h:%p swozzy
+
+Host ansible
+        HostName lp0365
+        User its-ansible
+        IdentityFile ~/.ssh/its-ansible
+        DynamicForward 0.0.0.0:3130
+        ProxyCommand ssh -W %h:%p swozzy
+
+# OpenShift
+# --------------------------------------------------------------
+# Production
+Host 131.211.51.*
+        User core
+        IdentityFile ~/.ssh/its-ansible
+        ProxyCommand ssh -W %h:%p ansible
+
+# Acceptatie
+Host 131.211.21.*
+        User core
+        IdentityFile ~/.ssh/its-ansible
+        ProxyCommand ssh -W %h:%p ansible
+
+# OpenStack
+# --------------------------------------------------------------
+# Production
+Host director-osp
+        HostName 131.211.13.241
+        User danny
+        IdentityFile ~/.ssh/universiteit-utrecht
+        ProxyCommand ssh -W %h:%p swozzy

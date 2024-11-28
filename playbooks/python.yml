@@ -1,0 +1,81 @@
+---
+- name: Install Python
+  hosts: localhost
+  vars:
+    python_version: 3.13.0
+
+  tasks:
+    - name: Ensure dependencies are installed
+      become: true
+      ansible.builtin.dnf:
+        name:
+          - make
+          - gcc
+          - zlib-devel
+          - bzip2
+          - bzip2-devel
+          - readline-devel
+          - sqlite
+          - sqlite-devel
+          - openssl-devel
+          - tk-devel
+          - libffi-devel
+          - xz-devel
+          - libuuid-devel
+          - gdbm-devel
+          - libnsl2-devel
+        state: present
+        update_cache: true
+
+    - name: Clone pyenv repository
+      ansible.builtin.git:
+        repo: 'https://github.com/pyenv/pyenv.git'
+        dest: ~/.pyenv
+        version: v2.4.19
+
+    - name: Add pyenv to bashrc
+      ansible.builtin.blockinfile:
+        path: ~/.bashrc
+        marker_begin: "BEGIN PYTHON"
+        marker_end: "END PYTHON"
+        append_newline: true
+        prepend_newline: true
+        block: |
+          export PYENV_ROOT="$HOME/.pyenv"
+          export PYENV_VERSION="{{ python_version }}"
+          export PIPENV_VERBOSITY=-1
+          command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+          eval "$(pyenv init -)"
+
+    - name: Source bashrc to apply changes
+      ansible.builtin.shell: source ~/.bashrc
+      args:
+        executable: /bin/bash
+      register: output
+      changed_when: output.rc != 0
+
+    - name: Check if Python is installed
+      ansible.builtin.command:
+        cmd: "pyenv versions"
+      register: version_output
+      changed_when: version_output.rc != 0
+
+    - name: Install Python
+      ansible.builtin.command:
+        cmd: "pyenv install {{ python_version }}"
+      when: "not python_version in version_output.stdout"
+      register: output
+      changed_when: output.rc != 0
+
+    - name: Check if pipenv is installed
+      ansible.builtin.command:
+        cmd: "pip list"
+      register: pipenv_output
+      changed_when: pipenv_output.rc != 0
+
+    - name: Install pipenv
+      ansible.builtin.command:
+        cmd: "pip install pipenv"
+      when: "not 'pipenv' in pipenv_output.stdout"
+      register: output
+      changed_when: output.rc != 0

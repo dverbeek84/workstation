@@ -1,0 +1,31 @@
+---
+- name: Install playbook dependencies
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Install playbook packages
+      ansible.builtin.dnf:
+        name:
+          - python3-ansible-lint
+          - python3-psutil
+
+- name: Import Common playbook
+  import_playbook: playbooks/common.yml
+
+- name: Import SSH playbook
+  import_playbook: playbooks/ssh.yml
+
+- name: Import Gnome playbook
+  import_playbook: playbooks/gnome.yml
+
+- name: Import Visual Studio Code playbook
+  import_playbook: playbooks/vscode.yml
+
+- name: Import Tools playbook
+  import_playbook: playbooks/tools.yml
+
+- name: Import Python playbook
+  import_playbook: playbooks/python.yml
+
+- name: Import Javascript playbook
+  import_playbook: playbooks/javascript.yml

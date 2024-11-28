@@ -1,0 +1,88 @@
+---
+- name: Setup common
+  hosts: localhost
+  become: true
+
+  tasks:
+    - name: Set hostname
+      ansible.builtin.hostname:
+        name: danny-desktop
+
+    - name: Enable RPM Fusion
+      ansible.builtin.dnf:
+        name:
+          - "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_major_version }}.noarch.rpm"
+          - "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_distribution_major_version }}.noarch.rpm"
+        disable_gpg_check: true
+
+    - name: Uninstall packages
+      ansible.builtin.dnf:
+        name:
+          - cheese
+          - gnome-boxes
+          - gnome-calendar
+          - gnome-connections
+          - gnome-contacts
+          - gnome-maps
+          - gnome-photos
+          - gnome-tour
+          - gnome-weather
+          - totem
+          - rhythmbox
+        state: absent
+
+    - name: Install packages
+      ansible.builtin.dnf:
+        name:
+          - darktable
+          - keepassxc
+          - pwgen
+          - tilix
+          - sshuttle
+          - thunderbird
+          - vim
+          - vlc
+
+    - name: Install Spotify
+      community.general.flatpak:
+        name: com.spotify.Client
+
+    # TODO: Improve this
+    - name: Add COMMON source line to .bashrc
+      become: false
+      ansible.builtin.blockinfile:
+        path: ~/.bashrc
+        marker_begin: "BEGIN COMMON"
+        marker_end: "END COMMON"
+        append_newline: true
+        prepend_newline: true
+        block: "{{ lookup('file', 'bashrc') }}"
+
+    - name: Add .gitconfig
+      become: false
+      ansible.builtin.copy:
+        content: |
+          [user]
+                  name = Danny Verbeek
+                  email = d.verbeek@dotnow.nl
+          [init]
+                  defaultBranch = main
+
+        dest: ~/.gitconfig
+        owner: danny
+        group: danny
+        mode: "0600"
+        force: true
+        remote_src: false
+
+    - name: Add .os file
+      become: false
+      ansible.builtin.copy:
+        src: os
+        dest: ~/.os
+        owner: danny
+        group: danny
+        mode: "0600"
+        decrypt: true
+        force: true
+        remote_src: false

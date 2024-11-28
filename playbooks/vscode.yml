@@ -1,0 +1,57 @@
+---
+- name: Install Visual Studio Code
+  hosts: localhost
+  become: true
+
+  tasks:
+    - name: Ensure Microsoft repository key is installed
+      ansible.builtin.rpm_key:
+        state: present
+        key: https://packages.microsoft.com/keys/microsoft.asc
+
+    - name: Ensure Visual Studio Code repository is enabled
+      ansible.builtin.copy:
+        dest: /etc/yum.repos.d/vscode.repo
+        mode: "0644"
+        content: |
+          [code]
+          name=Visual Studio Code
+          baseurl=https://packages.microsoft.com/yumrepos/vscode
+          enabled=1
+          gpgcheck=1
+          gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+
+    - name: Ensure Visual Studio Code is installed
+      ansible.builtin.dnf:
+        name:
+          - code
+        update_cache: true
+
+    - name: Ensure Visual Studio Code extensions are installed
+      ansible.builtin.command:
+        cmd: "code --install-extension {{ item }}"
+      loop:
+        - dhoeric.ansible-vault
+        - github.copilot
+        - github.copilot-chat
+        - github.remotehub
+        - github.vscode-github-actions
+        - github.vscode-pull-request-github
+        - ms-azuretools.vscode-docker
+        - ms-kubernetes-tools.vscode-kubernetes-tools
+        - ms-python.python
+        - ms-python.debugpy
+        - ms-python.vscode-pylance
+        - redhat.ansible
+        - redhat.vscode-openshift-connector
+        - redhat.vscode-redhat-account
+        - redhat.vscode-tekton-pipelines
+        - redhat.vscode-yaml
+        - vscode.docker
+        - vscode.github-authentication
+        - vscode.yaml
+        - vue.volar
+        - wolfmah.ansible-vault-inline
+      register: output
+      changed_when: output.rc != 0
+      become: false
